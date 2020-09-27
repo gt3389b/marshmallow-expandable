@@ -1,7 +1,7 @@
 import logging
 
+import marshmallow
 from marshmallow import fields
-
 from marshmallow_expandable.argument_builder import ArgumentBuilder
 
 logger = logging.getLogger(__name__)
@@ -11,8 +11,7 @@ class ExpandableSchemaMixin(object):
     def __init__(self, extra=None, only=None, exclude=(), prefix='', strict=None,
                  many=False, context=None, load_only=(), dump_only=(),
                  partial=False, expand=()):
-        super().__init__(extra, only, exclude, prefix, strict, many, context, load_only,
-                         dump_only, partial)
+        super().__init__()
 
         self._expand = self._normalize_expand(expand)
 
@@ -22,7 +21,7 @@ class ExpandableSchemaMixin(object):
         recursively, while assigning to self.expand the fields he is immediately interested
         """
         if expand is not None:
-            self._BaseSchema__apply_nested_option('expand', expand, 'intersection')
+            self._Schema__apply_nested_option('expand', expand, 'intersection')
 
             expand = self.set_class([field.split('.', 1)[0] for field in expand])
 
@@ -41,12 +40,15 @@ class ExpandableSchemaMixin(object):
 class ExpandableNested(fields.Nested):
     def __init__(self, nested, **kwargs):
         super().__init__(nested, **kwargs)
+        #super().__init__(lambda: test,**kwargs)
         self.expand = kwargs.get('expand', ())
 
     @property
     def schema(self):
-        if self._Nested__schema:
-            return self._Nested__schema
+        #if self._Nested__schema:
+        #    return self._Nested__schema
+        if self._schema:
+            return self._schema
 
         schema = super().schema
         if isinstance(schema, ExpandableSchemaMixin):

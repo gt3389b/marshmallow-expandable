@@ -61,7 +61,8 @@ sample_json = dict(
 
 class TestExpandableSchemaMixin:
     def test_serialize(self):
-        result, errors = MySchema(expand=['attr3']).dump(sample_json)
+        #result, errors = MySchema(expand=['attr3']).dump(sample_json)
+        result = MySchema(expand=['attr3']).dump(sample_json)
 
         expected_result = dict(
             id=1,
@@ -81,7 +82,8 @@ class TestExpandableSchemaMixin:
         assert expected_result == result
 
     def test_serialize_many(self):
-        result, errors = MySchema(expand=['attr4']).dump(sample_json)
+        #result, errors = MySchema(expand=['attr4']).dump(sample_json)
+        result = MySchema(expand=['attr4']).dump(sample_json)
 
         expected_result = dict(
             id=1,
@@ -100,7 +102,8 @@ class TestExpandableSchemaMixin:
         assert expected_result == result
 
     def test_serialize_many_nested(self):
-        result, errors = MySchema(expand=['attr4.attr6', 'attr3']).dump(sample_json)
+        #result, errors = MySchema(expand=['attr4.attr6', 'attr3']).dump(sample_json)
+        result = MySchema(expand=['attr4.attr6', 'attr3']).dump(sample_json)
 
         expected_result = dict(
             id=1,
@@ -139,7 +142,8 @@ class TestExpandableSchemaMixin:
 
         samey = {'id': 7, 'attr3': 'pine-7', 'attr4': 'pineapple-7', 'attr7': {'id': 7}}
 
-        result, errors = MySchema(expand=['attr4.attr6.attr7']).dump(sample_json)
+        #result, errors = MySchema(expand=['attr4.attr6.attr7']).dump(sample_json)
+        result = MySchema(expand=['attr4.attr6.attr7']).dump(sample_json)
 
         expected_result = dict(
             id=1,
