@@ -6,6 +6,7 @@ class ArgumentBuilder:
         resource should be aggregated into single variables
         """
         if not many:
+            print(resource, argument_map)
             return {argument: resource[attribute_in_schema] for attribute_in_schema, argument in argument_map.items()}
 
         assert self._is_iterable(resource), 'The object is not iterable as expected!'

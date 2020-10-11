@@ -16,7 +16,8 @@ setup(name='marshmallow-expandable',
           'Programming Language :: Python'
       ],
       install_requires=[
-          "marshmallow"
+          "marshmallow",
+          "requests"
       ],
       setup_requires=['pytest-runner'],
       tests_require=['pytest'],

@@ -2,10 +2,16 @@ import logging
 
 import marshmallow
 from marshmallow import fields
-from marshmallow_expandable.argument_builder import ArgumentBuilder
+
+from .argument_builder import ArgumentBuilder
+from .patterns import ResourcePattern
+from .query import RestQuerySet
+from .managers import ResourceManagerDescriptor, ResourceManager
+from .resource import Resource
+
+from pprint import pprint
 
 logger = logging.getLogger(__name__)
-
 
 class ExpandableSchemaMixin(object):
     def __init__(self, extra=None, only=None, exclude=(), prefix='', strict=None,
@@ -13,8 +19,69 @@ class ExpandableSchemaMixin(object):
                  partial=False, expand=()):
         super().__init__()
 
+        #print(self, pprint(vars(self)), pprint(str(self)))
+        #print(self.__class__, self.fields.keys())
+        #print(self.fields.values())
+        #print("****")
+        #pprint(self.fields)
+        #print("****")
+        meta = vars(self.Meta)
+
+        # set up fields
+        #self._fields = self.fields.keys()
+
+        _meta = self._init_metadata(meta.items())
+        #self._init_resource()
+        self.model = Resource(data={'_meta':_meta, '_fields':self.fields})
+
+        manager = ResourceManager()
+        manager.object_class = self.model
+        #self._objects = ResourceManagerDescriptor(manager)
+        self._objects = manager
+
+        logger.info("****************test****************")
         self._expand = self._normalize_expand(expand)
 
+    def _init_resource(self):
+        Patterns = type("Patterns", (object,), dict())
+        self._patterns = Patterns()
+
+        setattr(self._patterns, "item", ResourcePattern.parse(self._meta.item))
+        setattr(self._patterns, "list", ResourcePattern.parse(self._meta.list))
+
+        # default 
+        setattr(self._patterns, "create", ResourcePattern.parse(self._meta.list) if self._meta.create == '' else ResourcePattern.parse(self._meta.create))
+        setattr(self._patterns, "delete", ResourcePattern.parse(self._meta.item) if self._meta.delete == '' else ResourcePattern.parse(self._meta.delete))
+
+        #print(vars(self._patterns))
+        #print(self._patterns.create.get_absolute_url('test/'))
+
+
+    def _init_metadata(self, meta):
+        #Options = type("Options", (object,), dict())
+        class Options(dict):
+            def __repr__(self):
+                #return json.dumps(self.__dict__)
+                return ""
+        _meta = Options()
+
+        # init to nothing
+        for key in ['item', 'list', 'create', 'delete', 'root', 'primary_key']:
+            setattr(_meta, key, '')
+
+        # init to nothing
+        for key in ['page_size', 'page_size_params']:
+        #for key in ['page_size', 'page_size_params', 'pk_name', 'pk']:
+            setattr(_meta, key, None)
+
+        # init metas
+        for key, value in meta:
+            if key[0] != '_':
+                setattr(_meta, key, value)
+
+        #print(vars(self._meta))
+        return _meta
+        
     def _normalize_expand(self, expand):
         """
         This function takes the list of fields to expand and assigns this attribute
@@ -45,8 +112,6 @@ class ExpandableNested(fields.Nested):
 
     @property
     def schema(self):
-        #if self._Nested__schema:
-        #    return self._Nested__schema
         if self._schema:
             return self._schema
 
@@ -73,6 +138,7 @@ class ResourceExpander:
     def expand_resource(self, schema, many, resource):
         arg_builder = ArgumentBuilder()
 
+        #print(schema, resource)
         if many:
             batch_func, batch_arguments_map = self._get_query_function_and_arguments(schema, 'batch')
             if batch_func:
